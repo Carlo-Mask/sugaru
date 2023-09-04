@@ -1,4 +1,5 @@
 
+#[macro_export]
 macro_rules! lambda {
 	($param:ident $(: $param_type:ty)? => $body: expr) => {
 		| $param $(: $param_type)? | $body
@@ -8,8 +9,7 @@ macro_rules! lambda {
     };
 }
 
-pub(crate) use lambda;
-
+#[macro_export]
 macro_rules! closure {
     ($param:ident $(: $param_type:ty)? => $body: expr) => {
 		move | $param $(: $param_type)? | $body
@@ -18,8 +18,8 @@ macro_rules! closure {
         move | $a $(: $a_type )? | closure!($( $x $(: $x_type )? => )+ $body)
     };
 }
-pub(crate) use closure;
 
+#[macro_export]
 macro_rules! map {
 	($($key:expr => $value:expr),*) => {{
 		let mut map = std::collections::HashMap::new();
@@ -29,23 +29,19 @@ macro_rules! map {
 		map
 	}}
 }
-pub(crate) use map;
 
-
+#[macro_export]
 macro_rules! freeze {
 	($variable: ident) => { let $variable = $variable; }
 }
-pub(crate) use freeze;
 
+#[macro_export]
 macro_rules! make_mutable {
 	($variable: ident) => { let mut $variable = $variable; }
 }
-pub(crate) use make_mutable;
 
 #[cfg(test)]
 mod tests {
-
-	use super::*;
 
 	#[test]
 	fn lambda() {
