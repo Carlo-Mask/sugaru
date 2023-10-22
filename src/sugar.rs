@@ -4,9 +4,6 @@ macro_rules! lambda {
 	($param:ident $(: $param_type:ty)? => $body: expr) => {
 		| $param $(: $param_type)? | $body
 	};
-    ($a:ident $(: $a_type:ty )? => $($x:ident $(: $x_type:ty)? => )+ $body:expr) => {
-        | $a $(: $a_type )? | lambda!($( $x $(: $x_type )? => )+ $body)
-    };
 }
 
 #[macro_export]
@@ -104,6 +101,26 @@ macro_rules! pipeline  {
 	($value:expr => $first_operation:path $(=> $function:path)+) => { pipeline!($first_operation($value) $(=> $function)+) };
 }
 
+/// Inspiré de <https://doc.rust-lang.org/beta/unstable-book/language-features/yeet-expr.html>
+/// Ressemble au `throw` de certains langages, mais en différent
+/// # Exemples
+/// ```
+/// # use util::yeet;
+/// fn divide_by_two(n: i32) -> Result<i32, &'static str> {
+/// 	if n % 2 != 0 {
+///         yeet!("Cannot divide an odd number by 2");
+/// 	}
+/// 	Ok(n / 2)
+/// }
+/// assert_eq!(divide_by_two(7), Err("Cannot divide an odd number by 2"))
+/// ```
+#[macro_export]
+macro_rules! yeet {
+    ($error:expr) => { return Err($error) }
+}
+
+
+
 #[cfg(test)]
 mod tests {
 
@@ -117,13 +134,6 @@ mod tests {
 			x + add
 		});
 		assert_eq!(add_6(3), 9);
-
-		// let add = lambda!(x => y => { x + y });
-		//
-		// assert_eq!(add(4)(5), 9);
-		//
-		// let add_20 = add(20);
-		// assert_eq!(add_20(13), 33);
 	}
 
 	#[test]
