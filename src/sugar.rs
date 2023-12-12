@@ -1,4 +1,18 @@
-
+/// Syntaxe alternative pour écrire des `lambdas`
+/// # Exemples
+/// ```
+/// # use sugaru::lambda;
+/// let add_5 = lambda!(x => x + 5);
+/// assert_eq!(add_5(3), 8);
+/// ```
+/// ```
+/// # use sugaru::lambda;
+/// let add_6: fn(i32) -> i32 = lambda!(x: i32 => {
+/// 	let add = 6;
+/// 	x + add
+/// });
+/// assert_eq!(add_6(3), 9);
+/// ```
 #[macro_export]
 macro_rules! lambda {
 	($param:ident $(: $param_type:ty)? => $body: expr) => {
@@ -6,6 +20,27 @@ macro_rules! lambda {
 	};
 }
 
+/// Syntaxe alternative pour écrire des `closures`
+/// # Exemples
+/// ```
+/// # use sugaru::closure;///
+/// let add_5 = closure!(x => x + 5);
+/// assert_eq!(add_5(3), 8);
+/// ```
+/// ```
+/// # use sugaru::closure;
+/// let sept = 7;
+/// let add_7 = closure!(x: i32 => x + sept);
+/// assert_eq!(add_7(10), 17);
+/// ```
+/// ```
+/// # use sugaru::closure;
+/// let add = closure!(x => y => { x + y });
+/// assert_eq!(add(4)(5), 9);
+///
+/// let add_20 = add(20);
+/// assert_eq!(add_20(13), 33);
+/// ```
 #[macro_export]
 macro_rules! closure {
     ($param:ident $(: $param_type:ty)? => $body: expr) => {
@@ -16,14 +51,19 @@ macro_rules! closure {
     };
 }
 
+/// One liner pour instancier un [std::collections::HashMap]
 /// # Examples
 ///```
-/// # use util::map;
+/// # use sugaru::map;
 /// let map = map! {
 /// 	1 => "un",
 /// 	2 => "deux",
 /// 	3 => "trois"
 /// };
+/// assert_eq!(map.len(), 3);
+/// assert_eq!(map[&1], "un");
+/// assert_eq!(map[&2], "deux");
+/// assert_eq!(map[&3], "trois");
 ///```
 #[macro_export]
 macro_rules! map {
@@ -34,14 +74,19 @@ macro_rules! map {
 	}}
 }
 
+/// One liner pour instancier un [std::collections::HashSet]
 /// # Examples
 /// ```
-/// # use util::set;
+/// # use sugaru::set;
 /// let set = set! {
 /// 	"un",
 /// 	"deux",
 /// 	"trois"
 /// };
+/// assert_eq!(set.len(), 3);
+/// assert!(set.contains("un"));
+/// assert!(set.contains("deux"));
+/// assert!(set.contains("trois"));
 /// ```
 #[macro_export]
 macro_rules! set {
@@ -52,46 +97,83 @@ macro_rules! set {
 	}}
 }
 
+/// Rend une variable immuable
+/// # Exemple
 /// ```compile_fail,E0384
-/// # use util::freeze;
+/// # use sugaru::freeze;
 /// let mut a = 3;
 /// a = 4;
 /// freeze!(a);
-/// a = 5;
+/// a = 5; // cannot assign twice to immutable variable
 /// ```
 #[macro_export]
 macro_rules! freeze {
-	($variable: ident) => { let $variable = $variable; }
+	($variable: ident) => {
+		let $variable = $variable;
+	};
 }
 
-/// # Examples
+/// Rend une variable mutable
+/// # Exemple
 ///```
-/// # use util::make_mutable;
+/// # use sugaru::make_mutable;
 /// let vec = vec![1, 2, 3];
 /// make_mutable!(vec);
 /// vec.push(4);
 /// ```
 #[macro_export]
 macro_rules! make_mutable {
-	($variable: ident) => { let mut $variable = $variable; }
+	($variable: ident) => {
+		let mut $variable = $variable;
+	};
 }
 
 #[macro_export]
 macro_rules! flat_mod {
-    ($mod_name: ident) => {
+	($mod_name: ident) => {
 		mod $mod_name;
 		pub use $mod_name::*;
 	};
 }
 
 /// Inspiré du pipeline operator `|>` que l'on trouve dans certains [langages fonctionnel](https://cs3110.github.io/textbook/chapters/hop/pipelining.html)
+///
+/// Chaine une valeur avec un appel de fonction
 /// # Exemples
 /// ```
-/// # use util::pipeline;
+/// # use sugaru::pipeline;
 /// fn increment(n: i32) -> i32 { n + 1 }
 /// fn double(n: i32) -> i32 { n * 2 }
 /// let i = pipeline!(5 |> increment |> double |> increment);
+/// assert_eq!(i, 13);
+///
 /// let boxed_twelve = pipeline!(2 + 3 => increment => double => Box::new);
+/// assert_eq!(boxed_twelve, Box::new(12));
+///
+/// pipeline!(
+/// 	(1 + 2 + 3) // Il faut délimiter le token tree
+/// 	|> increment
+/// 	|> double
+/// 	|> Box::new
+/// );
+///
+/// pipeline!(
+/// 	1 + 2 + 3 + 4 // On peut utiliser une expression dans cette version avec les =>
+/// 	=> increment
+/// 	=> double
+/// 	=> increment
+/// );
+/// ```
+/// ```compile_fail
+/// # use sugaru::pipeline;
+/// # fn increment(n: i32) -> i32 { n + 1 }
+/// # fn double(n: i32) -> i32 { n * 2 }
+/// pipeline!(
+/// 	1 + 2 + 3 // Pas un token tree
+/// 	|> increment
+/// 	|> double
+/// 	|> Box::new
+/// );
 /// ```
 #[macro_export]
 macro_rules! pipeline  {
@@ -101,117 +183,79 @@ macro_rules! pipeline  {
 	($value:expr => $first_operation:path $(=> $function:path)+) => { pipeline!($first_operation($value) $(=> $function)+) };
 }
 
+/// Ressemble au `throw` de certains langages, mais en plus rusty
+///
 /// Inspiré de <https://doc.rust-lang.org/beta/unstable-book/language-features/yeet-expr.html>
-/// Ressemble au `throw` de certains langages, mais en différent
 /// # Exemples
 /// ```
-/// # use util::yeet;
-/// fn divide_by_two(n: i32) -> Result<i32, &'static str> {
-/// 	if n % 2 != 0 {
-///         yeet!("Cannot divide an odd number by 2");
-/// 	}
-/// 	Ok(n / 2)
+/// # use sugaru::yeet;
+/// fn divide_by_two(n: i32) -> Result<i32, String> {
+///     if n % 2 != 0 {
+///         yeet!(format!("Cannot divide {n} by 2"));
+///     }
+///     Ok(n / 2)
 /// }
-/// assert_eq!(divide_by_two(7), Err("Cannot divide an odd number by 2"))
+/// assert_eq!(divide_by_two(7), Err("Cannot divide 7 by 2".to_string()))
 /// ```
 #[macro_export]
 macro_rules! yeet {
-    ($error:expr) => { return Err($error) }
+	($error:expr) => {
+		return Err($error)
+	};
 }
 
+///
+/// # Exemples
+/// ```
+/// # use sugaru::skip_none;
+/// let mut vec = vec![];
+/// for option in [Some(1), None, Some(3), None] {
+///     let int = skip_none!(option);
+///     vec.push(int);
+/// }
+/// assert_eq!(vec.len(), 2);
+/// assert_eq!(vec[0], 1);
+/// assert_eq!(vec[1], 3);
+/// ```
+#[macro_export]
+macro_rules! skip_none {
+	($option:expr) => {
+		match $option {
+			None => continue,
+			Some(value) => value,
+		}
+	};
+}
 
-
-#[cfg(test)]
-mod tests {
-
-	#[test]
-	fn lambda() {
-		let add_5 = lambda!(x => x + 5);
-		assert_eq!(add_5(3), 8);
-
-		let add_6: fn(i32) -> i32 = lambda!(x: i32 => {
-			let add = 6;
-			x + add
-		});
-		assert_eq!(add_6(3), 9);
-	}
-
-	#[test]
-	fn closure() {
-		let add_5 = closure!(x => x + 5);
-		assert_eq!(add_5(3), 8);
-
-		let add_6: fn(i32) -> i32 = closure!(x: i32 => {
-			let add = 6;
-			x + add
-		});
-		assert_eq!(add_6(3), 9);
-
-		let add = closure!(x => y => { x + y });
-
-		assert_eq!(add(4)(5), 9);
-
-		let add_20 = add(20);
-		assert_eq!(add_20(13), 33);
-
-		let sept = 7;
-		let add_7 = closure!(x: i32 => x + sept);
-		assert_eq!(add_7(10), 17);
-	}
-
-	#[test]
-	fn map() {
-		let map = map! {
-			1 => "un",
-			2 => "deux",
-			3 => "trois"
-		};
-		assert_eq!(map.len(), 3);
-		assert_eq!(map[&1], "un");
-		assert_eq!(map[&2], "deux");
-	}
-
-	#[test]
-	fn set() {
-		let set = set! {
-			"un",
-			"deux",
-			"trois",
-			"deux"
-		};
-		assert_eq!(set.len(), 3);
-		assert!(set.contains("un"));
-		assert!(set.contains("deux"));
-	}
-
-	#[test]
-	fn make_mutable() {
-		let vec = vec![1, 2, 3];
-		make_mutable!(vec);
-		vec.push(4);
-	}
-
-	#[test]
-	fn pipeline() {
-		fn increment(n: i32) -> i32 { n + 1 }
-		fn double(n: i32) -> i32 { n * 2 }
-
-		let result = pipeline!(5 |> increment |> double |> increment);
-		assert_eq!(result, 13);
-		let result = pipeline!(5 => increment => double => increment);
-		assert_eq!(result, 13);
-		let result = pipeline!(5
-			|> increment
-			|> double
-			|> increment
-		);
-		assert_eq!(result, 13);
-		let result = pipeline!(5
-			=> increment
-			=> double
-			=> Box::new
-		);
-		assert_eq!(result, Box::new(12))
-	}
-
+///
+/// Initialise un vec en recalculant l'expression autant de fois que nécessaire
+///
+/// Contrairement à `vec![toto(); 3]`, on ne clone pas le résultat de `toto()` mais on rappelle `toto()`
+/// # Exemples
+/// ```
+/// # use sugaru::init_vec;
+/// struct NoCopy(i32);
+///	let mut nb_of_calls: u16 = 0;
+///	fn new_no_copy(nb_of_calls: &mut u16, i: i32) -> NoCopy {
+/// 	*nb_of_calls += 1;
+/// 	NoCopy(i)
+/// }
+/// let vec = init_vec![new_no_copy(&mut nb_of_calls, 42); 3];
+///	assert_eq!(nb_of_calls, 3);
+/// assert_eq!(vec.len(), 3);
+/// assert_eq!(vec[0].0, 42);
+/// assert_eq!(vec[1].0, 42);
+/// assert_eq!(vec[2].0, 42);
+///
+/// ```
+#[macro_export]
+macro_rules! init_vec {
+	($init_expression:expr; $length: expr) => {{
+		let length = $length;
+		let mut vec = Vec::with_capacity(length);
+		for _ in 0..length {
+			vec.push($init_expression);
+		}
+		vec
+	}};
 }
