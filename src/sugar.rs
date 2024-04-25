@@ -8,8 +8,8 @@
 /// ```
 /// # use sugaru::lambda;
 /// let add_6: fn(i32) -> i32 = lambda!(x: i32 => {
-/// 	let add = 6;
-/// 	x + add
+///     let add = 6;
+///     x + add
 /// });
 /// assert_eq!(add_6(3), 9);
 /// ```
@@ -56,9 +56,9 @@ macro_rules! closure {
 ///```
 /// # use sugaru::map;
 /// let map = map! {
-/// 	1 => "un",
-/// 	2 => "deux",
-/// 	3 => "trois"
+///     1 => "un",
+///     2 => "deux",
+///     3 => "trois"
 /// };
 /// assert_eq!(map.len(), 3);
 /// assert_eq!(map[&1], "un");
@@ -79,9 +79,9 @@ macro_rules! map {
 /// ```
 /// # use sugaru::set;
 /// let set = set! {
-/// 	"un",
-/// 	"deux",
-/// 	"trois"
+///     "un",
+///     "deux",
+///     "trois"
 /// };
 /// assert_eq!(set.len(), 3);
 /// assert!(set.contains("un"));
@@ -151,17 +151,17 @@ macro_rules! flat_mod {
 /// assert_eq!(boxed_twelve, Box::new(12));
 ///
 /// pipeline!(
-/// 	(1 + 2 + 3) // Il faut délimiter le token tree
-/// 	|> increment
-/// 	|> double
-/// 	|> Box::new
+///     (1 + 2 + 3) // Il faut délimiter le token tree
+///     |> increment
+///     |> double
+///     |> Box::new
 /// );
 ///
 /// pipeline!(
-/// 	1 + 2 + 3 + 4 // On peut utiliser une expression dans cette version avec les =>
-/// 	=> increment
-/// 	=> double
-/// 	=> increment
+///     1 + 2 + 3 + 4 // On peut utiliser une expression dans cette version avec les =>
+///     => increment
+///     => double
+///     => increment
 /// );
 /// ```
 /// ```compile_fail
@@ -169,10 +169,10 @@ macro_rules! flat_mod {
 /// # fn increment(n: i32) -> i32 { n + 1 }
 /// # fn double(n: i32) -> i32 { n * 2 }
 /// pipeline!(
-/// 	1 + 2 + 3 // Pas un token tree
-/// 	|> increment
-/// 	|> double
-/// 	|> Box::new
+///     1 + 2 + 3 // Pas un token tree
+///     |> increment
+///     |> double
+///     |> Box::new
 /// );
 /// ```
 #[macro_export]
@@ -235,10 +235,10 @@ macro_rules! skip_none {
 /// ```
 /// # use sugaru::init_vec;
 /// struct NoCopy(i32);
-///	let mut nb_of_calls: u16 = 0;
-///	fn new_no_copy(nb_of_calls: &mut u16, i: i32) -> NoCopy {
-/// 	*nb_of_calls += 1;
-/// 	NoCopy(i)
+/// let mut nb_of_calls: u16 = 0;
+/// fn new_no_copy(nb_of_calls: &mut u16, i: i32) -> NoCopy {
+///     *nb_of_calls += 1;
+///     NoCopy(i)
 /// }
 /// let vec = init_vec![new_no_copy(&mut nb_of_calls, 42); 3];
 ///	assert_eq!(nb_of_calls, 3);
@@ -258,4 +258,118 @@ macro_rules! init_vec {
 		}
 		vec
 	}};
+}
+
+/// # Exemples
+/// ```
+/// # use sugaru::until;
+/// let mut i = 0;
+/// let mut n = 0;
+/// until!((i > 2) {
+///     i += 1;
+///     n = (n + 1) * 2
+/// });
+/// assert_eq!(i, 3);
+/// assert_eq!(n, 14);
+/// ```
+#[macro_export]
+macro_rules! until {
+	($condition:tt $body:tt) => {
+		while !$condition {
+			$body
+		}
+	};
+	($condition:tt do $body:tt) => {
+		until!($condition $body)
+	};
+}
+
+/// # Exemples
+/// ```
+/// # use sugaru::does;
+/// let mut i = 0;
+/// let mut n = 0;
+/// does!({
+///     i += 1;
+///     n = (n + 1) * 2;
+/// } while i < 3);
+/// assert_eq!(i, 3);
+/// assert_eq!(n, 14);
+/// ```
+/// ```
+/// # use sugaru::does;
+/// let mut i = 0;
+/// let mut n = 0;
+/// does!({
+///     i += 1;
+///     n = (n + 1) * 2;
+/// } until i == 3);
+/// assert_eq!(i, 3);
+/// assert_eq!(n, 14);
+/// ```
+/// ```
+/// # use sugaru::does;
+/// let mut n = 0;
+/// does!((n = 1) unless true);
+/// assert_eq!(n, 0);
+/// does!((n = 1) unless false);
+/// assert_eq!(n, 1);
+/// ```
+#[macro_export]
+macro_rules! does {
+	($body:tt while $condition:expr) => {
+		does!($body until !$condition)
+	};
+	($body:tt until $condition:expr) => {
+		loop {
+			$body
+			if $condition {
+				break;
+			}
+		}
+	};
+	($todo:tt unless $condition:expr) => {
+		if !$condition {
+			$todo
+		}
+	};
+}
+
+/// # Exemples
+/// ```
+/// # use sugaru::unless;
+/// let mut n = 0;
+/// unless!(true {
+///     n = 1;
+/// });
+/// assert_eq!(n, 0);
+/// unless!((1 == 2) {
+///     n = 1;
+/// });
+/// assert_eq!(n, 1);
+/// ```
+/// ```
+/// # use sugaru::unless;
+/// let mut n = 0;
+/// unless!(true {
+///     n = 1;
+/// } else {
+///     n = 2;
+/// });
+/// assert_eq!(n, 2);
+/// ```
+#[macro_export]
+macro_rules! unless {
+	($condition:tt $body:tt) => {
+		if !$condition {
+			$body
+		}
+	};
+	($condition:tt $body:tt else $else_body:tt) => {
+		if $condition {
+			$else_body
+		} else {
+			$body
+		}
+	};
 }
