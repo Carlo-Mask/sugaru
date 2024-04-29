@@ -241,7 +241,7 @@ macro_rules! skip_none {
 ///     NoCopy(i)
 /// }
 /// let vec = init_vec![new_no_copy(&mut nb_of_calls, 42); 3];
-///	assert_eq!(nb_of_calls, 3);
+/// assert_eq!(nb_of_calls, 3);
 /// assert_eq!(vec.len(), 3);
 /// assert_eq!(vec[0].0, 42);
 /// assert_eq!(vec[1].0, 42);
@@ -388,7 +388,7 @@ macro_rules! unless {
 /// let result: Result<f32, String> = tries!({
 ///     let int: i32 = attempt()?;
 ///     let float: f32 = transform(int)?;
-/// 	Ok(float)
+///     Ok(float)
 /// });
 /// assert_eq!(result, Ok(3.5));
 /// ```
