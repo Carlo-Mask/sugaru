@@ -374,6 +374,8 @@ macro_rules! unless {
 	};
 }
 
+/// Fonctionne que avec [Result] mais pourra fonctionner avec toutes les implémentations de [core::ops::Try]
+/// quand `try_trait_v2` sera stabilisé
 /// # Exemples
 /// ```
 /// # use sugaru::tries;
@@ -388,13 +390,15 @@ macro_rules! unless {
 /// let result: Result<f32, String> = tries!({
 ///     let int: i32 = attempt()?;
 ///     let float: f32 = transform(int)?;
-///     Ok(float)
+///     float
 /// });
 /// assert_eq!(result, Ok(3.5));
 /// ```
 #[macro_export]
 macro_rules! tries {
+	// Dès que try_trait_v2 est stabilisé
+	// (|| core::ops::Try::from_output($to_try))()
 	($to_try:expr) => {
-		(|| $to_try)()
+		(|| Ok($to_try))()
 	};
 }
