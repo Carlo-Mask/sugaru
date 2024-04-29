@@ -373,3 +373,28 @@ macro_rules! unless {
 		}
 	};
 }
+
+/// # Exemples
+/// ```
+/// # use sugaru::tries;
+/// fn attempt() -> Result<i32, String> {
+///     Ok(7)
+/// }
+///
+/// fn transform(n: i32) -> Result<f32, String> {
+///     Ok(n as f32 / 2.0)
+/// }
+///
+/// let result: Result<f32, String> = tries!({
+///     let int: i32 = attempt()?;
+///     let float: f32 = transform(int)?;
+/// 	Ok(float)
+/// });
+/// assert_eq!(result, Ok(3.5));
+/// ```
+#[macro_export]
+macro_rules! tries {
+	($to_try:expr) => {
+		(|| $to_try)()
+	};
+}
