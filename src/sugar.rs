@@ -179,8 +179,8 @@ macro_rules! flat_mod {
 macro_rules! pipeline  {
     ($value:tt |> $function:path ) => { $function($value) };
 	($value:tt |> $first_operation:path $(|> $function:path)+) => { pipeline!(($first_operation($value)) $(|> $function)+) };
-    ($value:expr => $function:path ) => { $function($value) };
-	($value:expr => $first_operation:path $(=> $function:path)+) => { pipeline!($first_operation($value) $(=> $function)+) };
+    ($value:expr => $function:expr ) => { $function($value) };
+	($value:expr => $first_operation:expr $(=> $function:expr)+) => { pipeline!($first_operation($value) $(=> $function)+) };
 }
 
 /// Ressemble au `throw` de certains langages, mais en plus rusty
