@@ -15,9 +15,8 @@
 /// ```
 #[macro_export]
 macro_rules! lambda {
-	($param:ident $(: $param_type:ty)? => $body: expr) => {
-		| $param $(: $param_type)? | $body
-	};
+	($param:ident $(: $param_type:ty)? => $body: expr) =>
+		{ | $param $(: $param_type)? | $body };
 }
 
 /// Syntaxe alternative pour écrire des `closures`
@@ -43,12 +42,10 @@ macro_rules! lambda {
 /// ```
 #[macro_export]
 macro_rules! closure {
-    ($param:ident $(: $param_type:ty)? => $body: expr) => {
-		move | $param $(: $param_type)? | $body
-	};
-    ($a:ident $(: $a_type:ty )? => $($x:ident $(: $x_type:ty)? => )+ $body:expr) => {
-        move | $a $(: $a_type )? | closure!($( $x $(: $x_type )? => )+ $body)
-    };
+    ($param:ident $(: $param_type:ty)? => $body: expr) =>
+		{ move | $param $(: $param_type)? | $body };
+    ($a:ident $(: $a_type:ty )? => $($x:ident $(: $x_type:ty)? => )+ $body:expr) =>
+		{ move | $a $(: $a_type )? | closure!($( $x $(: $x_type )? => )+ $body) };
 }
 
 /// One liner pour instancier un [std::collections::HashMap]
