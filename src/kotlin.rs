@@ -94,3 +94,21 @@ pub trait KotlinExt: Sized {
 }
 
 impl<T> KotlinExt for T {}
+
+#[cfg(test)]
+mod test {
+	use super::*;
+
+	#[test]
+	fn also_test() {
+		let vec = Vec::new().also(|it: &mut Vec<i32>| {
+			it.push(1);
+			it.push(2);
+			it.push(3);
+		});
+		assert_eq!(vec, vec![1, 2, 3]);
+
+		let tuple = (1, 2).also(|it| it.1 = 3);
+		assert_eq!(tuple, (1, 3));
+	}
+}

@@ -2,7 +2,7 @@ use crate::pipeline;
 use core::{default::Default, ops::FnOnce};
 use ext_trait::extension;
 
-#[extension(pub trait ResultExtension)]
+#[extension(pub trait ResultExt)]
 impl<T, E> Result<T, E> {
 	fn filter_or(self, predicate: impl FnOnce(&T) -> bool, default_err: E) -> Self {
 		match self {
